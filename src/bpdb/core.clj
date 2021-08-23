@@ -1,124 +1,88 @@
 (ns bpdb.core
   (:require [instaparse.core :as insta]))
 
-#_
-(def as-and-bs
-  (insta/parser
-   "S = AB*
-    AB = A B
-    A = 'a'+
-    B = 'b'+"))
-
 ;;blueprints are lua objects...
 
 ;;ClassName '{' Properties+ '}' ;;denotes class
 ;;Property = CLASS | VALUE
 ;;STRING = ''' [a-Z0-9]* '''
 
-;;whitespace = #'\\s+'
-(def basic (insta/parser
-            "sentence = token (<whitespace> token)*
-             <token> = word | number
-             word = #'[a-zA-Z]+'
-             number = #'[0-9]+'"))
+;; (def lua (insta/parser "
+;; 	chunk ::= block
 
-(def basic (insta/parser
-            "<object> = TABLE|ARRAY|PRIM
-             <PRIM>  = NUMBER|IDENTIFIER|STRING|BOOLEAN|NIL
-             NIL     = 'nil'
-             BOOLEAN = 'true' | 'false'
-             NUMBER = INT|FLOAT
-             <INT>   =  #'\\-?[0-9]+'
-             <FLOAT> =  #'\\-?0*\\.[0-9]+'
-             QUOTE = '\\''
-             STRING = <QUOTE> #'[a-zA-Z0-9]*'  <QUOTE>
-             IDENTIFIER =  #'[a-zA-Z_]+[a-zA-Z0-9_]*'
-             LB    = '{'
-             RB    = '}'
-             ARRAY = <LB> PRIM+ <RB>
-             TABLE = <LB> PRIM '=' (PRIM|TABLE) <LB> 
-             LP    = '('
-             RP    = ')'
-             ARGS  = <LP><RP>
-             "))
+;; 	block ::= {stat} [retstat]
 
+;; 	stat ::=  ';' |
+;; 		 varlist '=' explist |
+;; 		 functioncall |
+;; 		 label |
+;; 		 'break' |
+;; 		 'goto' Name |
+;; 		 'do' block 'end' |
+;; 		 'while' exp 'do' block 'end' |
+;; 		 'repeat' block 'until' exp |
+;; 		 'if' exp 'then' block {'elseif' exp 'then' block} ['else' block] 'end' |
+;; 		 'for' Name '=' exp ',' exp [',' exp] 'do' block 'end' |
+;; 		 'for' namelist 'in' explist 'do' block 'end' |
+;; 		 'function' funcname funcbody |
+;; 		 'local' 'function' Name funcbody |
+;; 		 'local' namelist ['=' explist]
 
-(def lua (insta/parser "
-	chunk ::= block
+;; 	retstat ::= 'return' [explist] [';']
 
-	block ::= {stat} [retstat]
+;; 	label ::= '::' Name '::'
 
-	stat ::=  ';' |
-		 varlist '=' explist |
-		 functioncall |
-		 label |
-		 'break' |
-		 'goto' Name |
-		 'do' block 'end' |
-		 'while' exp 'do' block 'end' |
-		 'repeat' block 'until' exp |
-		 'if' exp 'then' block {'elseif' exp 'then' block} ['else' block] 'end' |
-		 'for' Name '=' exp ',' exp [',' exp] 'do' block 'end' |
-		 'for' namelist 'in' explist 'do' block 'end' |
-		 'function' funcname funcbody |
-		 'local' 'function' Name funcbody |
-		 'local' namelist ['=' explist]
+;; 	funcname ::= Name {'.' Name} [':' Name]
 
-	retstat ::= 'return' [explist] [';']
+;; 	varlist ::= var {',' var}
 
-	label ::= '::' Name '::'
+;; 	var ::=  Name | prefixexp '[' exp ']' | prefixexp '.' Name
 
-	funcname ::= Name {'.' Name} [':' Name]
+;; 	namelist ::= Name {',' Name}
 
-	varlist ::= var {',' var}
-
-	var ::=  Name | prefixexp '[' exp ']' | prefixexp '.' Name
-
-	namelist ::= Name {',' Name}
-
-	explist ::= exp {',' exp}
+;; 	explist ::= exp {',' exp}
 
 
-	exp ::=  'nil' | 'false' | 'true' | Numeral | LiteralString | '...' | functiondef | 
-		 prefixexp | tableconstructor | exp binop exp | unop exp
+;; 	exp ::=  'nil' | 'false' | 'true' | Numeral | LiteralString | '...' | functiondef | 
+;; 		 prefixexp | tableconstructor | exp binop exp | unop exp
 
-	prefixexp ::= var | functioncall | '(' exp ')'
+;; 	prefixexp ::= var | functioncall | '(' exp ')'
 
-	functioncall ::=  prefixexp args | prefixexp ':' Name args 
+;; 	functioncall ::=  prefixexp args | prefixexp ':' Name args 
 
-	args ::=  '(' [explist] ')' | tableconstructor | LiteralString 
+;; 	args ::=  '(' [explist] ')' | tableconstructor | LiteralString 
 
-	functiondef ::= 'function' funcbody
+;; 	functiondef ::= 'function' funcbody
 
-	funcbody ::= '(' [parlist] ')' block 'end'
+;; 	funcbody ::= '(' [parlist] ')' block 'end'
 
-	parlist ::= namelist [',' '...'] | '...'
+;; 	parlist ::= namelist [',' '...'] | '...'
 
-	tableconstructor ::= '{' [fieldlist] '}'
+;; 	tableconstructor ::= '{' [fieldlist] '}'
 
-  QUOTE ::= '\\''
+;;   QUOTE ::= '\\''
 
-  Name ::=  #'[a-zA-Z_]+[a-zA-Z0-9_]*'
+;;   Name ::=  #'[a-zA-Z_]+[a-zA-Z0-9_]*'
 
-  Numeral ::= INT|FLOAT
-  <INT>   ::=  #'\\-?[0-9]+'
-  <FLOAT> ::=  #'\\-?0*\\.[0-9]+'
+;;   Numeral ::= INT|FLOAT
+;;   <INT>   ::=  #'\\-?[0-9]+'
+;;   <FLOAT> ::=  #'\\-?0*\\.[0-9]+'
 
-  LiteralString ::=  <QUOTE> #'[a-zA-Z0-9]*'  <QUOTE>
+;;   LiteralString ::=  <QUOTE> #'[a-zA-Z0-9]*'  <QUOTE>
 
-	fieldlist ::= field {fieldsep field} [fieldsep]
+;; 	fieldlist ::= field {fieldsep field} [fieldsep]
 
-	field ::= '[' exp ']' '=' exp | Name '=' exp | exp
+;; 	field ::= '[' exp ']' '=' exp | Name '=' exp | exp
 
-	fieldsep ::= ',' | ';'
+;; 	fieldsep ::= ',' | ';'
 
-	binop ::=  '+' | '-' | '*' | '/' | '//' | '^' | '%' | 
-		 '&' | '~' | '|' | '>>' | '<<' | '..' | 
-		 '<' | '<=' | '>' | '>=' | '==' | '~=' | 
-		 'and' | 'or'
+;; 	binop ::=  '+' | '-' | '*' | '/' | '//' | '^' | '%' | 
+;; 		 '&' | '~' | '|' | '>>' | '<<' | '..' | 
+;; 		 '<' | '<=' | '>' | '>=' | '==' | '~=' | 
+;; 		 'and' | 'or'
 
-	unop ::= '-' | 'not' | '#' | '~'
-" ))
+;; 	unop ::= '-' | 'not' | '#' | '~'
+;; " ))
 
 (def lua (insta/parser "
 	chunk ::= block

@@ -1,14 +1,61 @@
-# bpdb
+* bpdb
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure library designed to implement a simple parser and database for 
+Supreme Commander: Forged Alliance blue prints.
 
-## Usage
+** Usage
 
-FIXME
 
-## License
+Initially, we define a simple parser for lua (the SupCom variant)
+using the official BNF for lua syntax and the excellent InstaParse library.
 
-Copyright © 2021 FIXME
+The intermediate format emits an AST in EDN (basically just clojure data structures)
+hiccup style (primarily nested vectors).
+
+For example:
+
+#+BEGIN_SRC clojure
+user>(require 'bpdb.core)
+nil
+user> (bpd.core/lua "while l do
+                       print(l.value)
+                       l = l.next
+                     end ")
+[:chunk
+ [:block
+  [:stat
+   "while"
+   [:exp [:prefixexp [:var [:Name "l"]]]]
+   "do"
+   [:block
+    [:stat
+     [:functioncall
+      [:prefixexp [:var [:Name "print"]]]
+      [:args
+       "("
+       [:explist
+        [:exp
+         [:prefixexp
+          [:var [:prefixexp [:var [:Name "l"]]] "." [:Name "value"]]]]]
+       ")"]]]
+    [:stat
+     [:varlist [:var [:Name "l"]]]
+     "="
+     [:explist
+      [:exp
+       [:prefixexp
+        [:var [:prefixexp [:var [:Name "l"]]] "." [:Name "next"]]]]]]]
+   "end"]]]
+#+END_SRC
+
+
+Going forward, we will be able to coerce the data into more useful higher
+level structures, and create a datalog db to store facts for trivial querying e.g.
+to support a browser-based SPA that can be built directly from the blueprints.
+
+** License
+
+Copyright © 2021 joinr
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License 2.0 which is available at
