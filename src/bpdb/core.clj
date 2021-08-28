@@ -84,6 +84,8 @@
 ;; 	unop ::= '-' | 'not' | '#' | '~'
 ;; " ))
 
+;;Basic working lua parser; some rough edges but this is mostly
+;;copy and paste, with some adaptation for instaparse...
 (def lua (insta/parser "
 	chunk ::= block
 
@@ -103,11 +105,17 @@
 		 'for'<s>namelist<s>'in'<s>explist<s>'do'<s>block<s>'end'<s>|
 		 'function'<s>funcname<s>funcbody|
 		 'local'<s>'function'<s>Name<s>funcbody |
-		 'local'<s>namelist [<s>'='<s>explist]
+		 'local'<s>namelist [<s>'='<s>explist]  |
+     comment
 
 	retstat ::= 'return'<s>[explist] [<s>';']
 
 	label ::= '::'<s> Name<s> '::'
+
+  EOL ::= #'$|\n'
+  comment ::= linecomment | blockcomment
+  linecomment   ::=  #'^' <s> '--' #'(?!\\[\\[).*' <EOL>
+  blockcomment  ::=  #'^' <s> '--[[' <s>  #'.*' <s> #'.*\\]\\]'   <EOL>
 
 	funcname ::= Name {'.' Name} [':' Name]
 
@@ -125,7 +133,7 @@
 
 	prefixexp ::= var | functioncall | '(' exp ')'
 
-	functioncall ::=  prefixexp args | prefixexp ':' Name args 
+	functioncall ::=  prefixexp args | prefixexp ':' Name args | Name <s> tableconstructor
 
 	args ::=  '(' [explist] ')' | tableconstructor | LiteralString 
 
@@ -135,23 +143,25 @@
 
 	parlist ::= namelist [',' '...'] | '...'
 
-	tableconstructor ::= '{' [fieldlist] '}'
+	tableconstructor ::= '{'<s> [fieldlist]<s> '}'
 
   QUOTE ::= '\\''
   DQUOTE ::= '\"'
 
   Name ::=  #'[a-zA-Z_]+[a-zA-Z0-9_]*'
 
-  Numeral ::= INT|FLOAT
-  <INT>   ::=  #'\\-?[0-9]+'
-  <FLOAT> ::=  #'\\-?0*\\.[0-9]+'
+  Numeral ::= INT|FLOAT|SCIENTIFIC
+  <INT>   ::=  #'\\d+'
+  <FLOAT> ::=  #'\\d*\\.\\d+'
+  <SCIENTIFIC> ::=  #'\\d*[eE]\\d+'
 
-  LiteralString ::=  (<QUOTE> #'[a-zA-Z0-9]*'  <QUOTE>) |
-                     (<DQUOTE> #'[a-zA-Z0-9]*'  <DQUOTE>)
+  LiteralString ::=  qstring | dstring
+  qstring   ::= <QUOTE> #'[/ <>a-zA-Z0-9_]*'  <QUOTE>
+  dstring   ::= <DQUOTE> #'[/ <>a-zA-Z0-9_]*'  <DQUOTE>
 
 	fieldlist ::= field<s>{<s>fieldsep<s>field} [fieldsep<s>]
 
-	field ::= '[' exp ']' '=' exp | Name '=' exp | exp
+	field ::= '[' exp ']'<s> '=' <s> exp | Name <s> '=' <s> exp | exp
 
 	fieldsep ::= ',' | ';'
 
@@ -163,3 +173,7 @@
 	unop ::= '-' | 'not' | '#' | '~'
   s ::= #'\\s*'
 " ))
+
+
+
+
