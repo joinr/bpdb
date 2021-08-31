@@ -89,7 +89,7 @@
 (def lua (insta/parser "
 	chunk ::= block
 
-	block ::= {stat|stat<s>+} [<s>retstat]
+	block ::= {stat|(stat<s>)+} [<s>retstat]
 
 	stat ::=  ';' |
 		 varlist<s>'='<s>explist |
@@ -105,16 +105,16 @@
 		 'for'<s>namelist<s>'in'<s>explist<s>'do'<s>block<s>'end'<s>|
 		 'function'<s>funcname<s>funcbody|
 		 'local'<s>'function'<s>Name<s>funcbody |
-		 'local'<s>namelist [<s>'='<s>explist]  |
-     comment
+		 'local'<s>namelist [<s>'='<s>explist] |
+      comment
 
 	retstat ::= 'return'<s>[explist] [<s>';']
 
 	label ::= '::'<s> Name<s> '::'
 
-  EOL ::= #'$|\n'
+  EOL ::= #'.*$'
   comment ::= linecomment | blockcomment
-  linecomment   ::=  #'^' <s> '--' #'(?!\\[\\[).*' <EOL>
+  linecomment   ::=  '--'  #'(?!\\[\\[).*'  <s> <EOL>
   blockcomment  ::=  #'^' <s> '--[[' <s>  #'.*' <s> #'.*\\]\\]'   <EOL>
 
 	funcname ::= Name {'.' Name} [':' Name]
@@ -128,14 +128,14 @@
 	explist ::= exp {<s>',' exp}
 
 
-	exp ::=  'nil' | 'false' | 'true' | Numeral | LiteralString | '...' | functiondef | 
-		 prefixexp | tableconstructor | exp<s>binop<s>exp | unop<s>exp
+	exp ::=  'nil' | 'false' | 'true' | Numeral | LiteralString | '...' | functiondef |
+		 prefixexp | tableconstructor | exp<s>binop<s>exp | unop<s>exp | comment
 
 	prefixexp ::= var | functioncall | '(' exp ')'
 
 	functioncall ::=  prefixexp args | prefixexp ':' Name args | Name <s> tableconstructor
 
-	args ::=  '(' [explist] ')' | tableconstructor | LiteralString 
+	args ::=  '(' [explist] ')' | tableconstructor | LiteralString
 
 	functiondef ::= 'function'<s>funcbody
 
@@ -176,4 +176,5 @@
 
 
 
-
+;;linecomment   ::=  #'^.*'  <s> '--' <s> #'(?!\\[\\[).*'  <s> <EOL>
+                        ;;                        blockcomment  ::=  #'^' <s> '--[[' <s>  #'.*' <s> #'.*\\]\\]'   <EOL>
